@@ -1,0 +1,84 @@
+#%RAML 1.0
+title: Remedy AR System API
+description: BMC Remedy Action Request System API to query (by name/status), get (by ID), and update Incident, Task, and WorkInfo. See link https://docs.bmc.com/docs/ars91/en/api-overview-609071508.html
+
+
+/incident:
+  /{incident_id}:
+    get:
+      displayName: Get Incident by ID
+      responses:
+        200:
+          description: Returns Incident object
+          body:
+            application/json:
+              type: any
+
+  post:
+    displayName: Create Incident
+    body:
+      application/json:
+        description: Remedy Incident fields
+        type: any
+    responses:
+      201:
+        description: Returns new Incident ID
+        body:
+          application/json:
+            type: any
+
+
+/task:
+  /{task_id}:
+    get:
+      displayName: Get Task by ID
+      responses:
+        200:
+          description: Returns Task object
+          body:
+            application/json:
+              type: any
+
+    patch:
+      displayName: Update Task
+      body:
+        application/json:
+          description: Remedy Task fields
+          type: any
+      responses:
+        201:
+
+  get:
+    displayName: Query Task
+    queryParameters:
+      taskName: string
+      status: string
+    responses:
+      200:
+        description: Return array of Tasks based on TaskName and Status
+        body:
+          application/json:
+            type: any
+
+
+/workinfo:
+  get:
+    displayName: Query WorkInfo by Task ID
+    queryParameters:
+      taskID: string
+    responses:
+      200:
+        description: Return array of WorkInfo based on TaskID
+        body:
+          application/json:
+            type: any
+
+  post:
+    displayName: Create WorkInfo
+    description: Create new WorkInfo under given Task
+    body:
+      application/json:
+        description: Remedy WorkInfo fields with task_ID
+        type: any
+    responses:
+      201:
