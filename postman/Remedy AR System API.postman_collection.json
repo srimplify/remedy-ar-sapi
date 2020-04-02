@@ -1,0 +1,196 @@
+{
+	"info": {
+		"_postman_id": "2c0d4218-f9f5-4467-8baa-5b77a33623af",
+		"name": "Remedy AR System API",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Get Task by ID",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8088/api/task/TAS000001569774",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8088",
+					"path": [
+						"api",
+						"task",
+						"TAS000001569774"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Query Task by Name and Status",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8088/api/task?taskName=JIRA escalation&status=Pending",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8088",
+					"path": [
+						"api",
+						"task"
+					],
+					"query": [
+						{
+							"key": "taskName",
+							"value": "JIRA escalation"
+						},
+						{
+							"key": "status",
+							"value": "Pending"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Update Task",
+			"request": {
+				"method": "PATCH",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n\t\"Status\": \"Staged\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8088/api/task/TAS000001569774",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8088",
+					"path": [
+						"api",
+						"task",
+						"TAS000001569774"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get Incident by ID",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8088/api/incident/INC000003341646",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8088",
+					"path": [
+						"api",
+						"incident",
+						"INC000003341646"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Create Incident",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": " {    \n\t\"Last_Name\": \"Allbrook\",\n\t\"First_Name\": \"Allen\",\n\t\"Service_Type\": \"3\",\n\t\"Impact\": \"3000\",\n\t\"Urgency\": \"3000\",\n\t\"Reported_Source\": \"10000\",\n\t\"Description\": \"this is working for me!\"\n }",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8088/api/incident",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8088",
+					"path": [
+						"api",
+						"incident"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get WorkInfo",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8088/api/workinfo?taskID=TAS000001569672",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8088",
+					"path": [
+						"api",
+						"workinfo"
+					],
+					"query": [
+						{
+							"key": "taskID",
+							"value": "TAS000001569672"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Create WorkInfo",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n\t\"task_ID\": \"TAS000001569672\",\n\t\"comment\": \"testing 123\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8088/api/workinfo",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8088",
+					"path": [
+						"api",
+						"workinfo"
+					]
+				}
+			},
+			"response": []
+		}
+	],
+	"protocolProfileBehavior": {}
+}
