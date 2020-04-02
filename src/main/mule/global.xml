@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:os="http://www.mulesoft.org/schema/mule/os" xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/os http://www.mulesoft.org/schema/mule/os/current/mule-os.xsd">
+	<configuration-properties doc:name="Configuration properties" doc:id="1cf904a3-7489-42c2-84aa-beea17f1a0f5" doc:description="config.yaml" file="config.yaml" />
+	<http:request-config name="Remedy_HTTP_Req_config" doc:name="HTTP Request configuration" doc:id="c053e1b9-0d31-4299-8dee-30def16e5fe7" >
+		<http:request-connection host="${remedy.host}" port="${remedy.port}" />
+	</http:request-config>
+	<os:object-store name="Remedy_Object_store" doc:name="Object store" doc:id="ee0e64a9-29d5-462f-9771-a7a1fe9a93a8" persistent="false" />
+</mule>

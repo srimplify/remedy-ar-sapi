@@ -1,0 +1,9 @@
+remedy:
+  host: "remedy-server-name.mycompany.com"
+  port: "8008"
+  user: "username"
+  password: ""
+ 
+  
+http:
+  port: "8081"

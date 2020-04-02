@@ -1,0 +1,201 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:os="http://www.mulesoft.org/schema/mule/os"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/os http://www.mulesoft.org/schema/mule/os/current/mule-os.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<flow name="get-incident-by-id" doc:id="243b68da-f76c-41d7-b2ce-4cd4589b3da0">
+		<set-variable value="#[&quot;('Incident Number'=\&quot;&quot; ++ (vars.incident_id default &quot;&quot;) ++ &quot;\&quot;)&quot;]" doc:name="Create Remedy Qual String" doc:id="5e168730-e8d6-416f-8f1a-881b508a6c8b" variableName="qualString" />
+		<flow-ref doc:name="get-jwt-from-os" doc:id="4733aa34-7a56-4020-8f38-7dfc1ea341af" name="get-jwt-from-os"/>
+		<http:request method="GET" doc:name="Get Incident by ID" doc:id="e7f23459-9393-48c4-941f-e11e6ce0d9a6" config-ref="Remedy_HTTP_Req_config" path="/api/arsys/v1/entry/HPD:IncidentInterface">
+			<http:headers><![CDATA[#[output application/x-www-form-urlencoded
+---
+{
+	"Authorization" : vars.jwtToken
+}]]]></http:headers>
+			<http:query-params><![CDATA[#[output application/java
+---
+{
+	"q" : vars.qualString
+}]]]></http:query-params>
+		</http:request>
+		<ee:transform doc:name="Transform Message" doc:id="b2481795-4de7-48c3-9b15-962d790f1c3a">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+	<flow name="create-incident" doc:id="32f5a17d-cf0c-48b6-8b5d-e25cbea3a7e2">
+		<set-variable value="#[payload]" doc:name="Save Incident information" doc:id="0931904a-899c-462e-8b1f-e2c9f36a7108" variableName="incInfo" />
+		<flow-ref doc:name="get-jwt-from-os" doc:id="14e41762-51ff-474a-9a52-233fed973f26" name="get-jwt-from-os" />
+		<http:request method="POST" doc:name="Create New Incident" doc:id="28a39820-0e6c-4cca-9372-dfbdda3eede9" config-ref="Remedy_HTTP_Req_config" path="/api/arsys/v1/entry/HPD:IncidentInterface_Create">
+			<http:body><![CDATA[#[vars.incInfo]]]></http:body>
+			<http:headers><![CDATA[#[output application/x-www-form-urlencoded
+---
+{
+	"Authorization" : vars.jwtToken
+}]]]></http:headers>
+		</http:request>
+		<set-variable value='#[splitBy (attributes.headers.Location, "/") [sizeOf (splitBy (attributes.headers.Location, "/")) -1]]' doc:name="Get new incident location key" doc:id="f7a40812-5ddd-431f-9463-48ff2a70cb43" variableName="newIncidentLocationKey" />
+		<http:request method="GET" doc:name="Get New Incident ID from Location key" doc:id="530d46cd-c6bf-45a6-bae9-3a053a374f34" config-ref="Remedy_HTTP_Req_config" path='#["/api/arsys/v1/entry/HPD:IncidentInterface_Create/" ++ vars.newIncidentLocationKey]'>
+			<http:headers><![CDATA[#[output application/x-www-form-urlencoded
+---
+{
+	"Authorization" : vars.jwtToken
+}]]]></http:headers>
+		</http:request>
+		<ee:transform doc:name="Extract New Incident ID" doc:id="00cbc680-4d7b-4f12-9686-7927cdb389de">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"Incident_Number": payload["values"]["Incident Number"] default "<error>"
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+	<flow name="get-task-by-id" doc:id="86f1b82f-3300-45bb-8576-1bbb50a4db74">
+		<flow-ref doc:name="get-jwt-from-os" doc:id="c0868c86-3096-4fdb-ba3d-0c99b5a83d62" name="get-jwt-from-os" />
+		<http:request method="GET" doc:name="Remedy Request" doc:id="b40ef87d-0e5d-44e8-8941-4f70c49c03ee" config-ref="Remedy_HTTP_Req_config" path='#["/api/arsys/v1/entry/TMS:Task/" ++ vars.task_id]'>
+			<http:headers><![CDATA[#[output application/x-www-form-urlencoded
+---
+{"Authorization" : vars.jwtToken}]]]></http:headers>
+		</http:request>
+		<ee:transform doc:name="Transform Message" doc:id="a0d78eea-591c-43ec-9c19-48d70d0d6532">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+	<flow name="query-task-by-name-status" doc:id="2131be1b-7f46-4f1e-b5a0-a0436261f3cf">
+		<set-variable value="#[&quot;('TaskName'=\&quot;&quot; ++ attributes.queryParams.taskName default &quot;&quot; ++
+&quot;\&quot; AND 'Status'=\&quot;&quot; ++ attributes.queryParams.status default &quot;Work In Progress&quot; ++ &quot;\&quot;)&quot;]" doc:name="Create Remedy Qual String" doc:id="51ac3ac5-dfff-4764-8248-64f4b9ac9673" variableName="qualString" />
+		<flow-ref doc:name="get-jwt-from-os" doc:id="196a8613-733a-423b-a4f1-25da469d94e4" name="get-jwt-from-os" />
+		<http:request method="GET" doc:name="Query task by name and status" doc:id="b85e8438-3f45-42ec-9de8-9523d5ffc869" config-ref="Remedy_HTTP_Req_config" path="/api/arsys/v1/entry/TMS:Task">
+			<http:headers><![CDATA[#[output application/x-www-form-urlencoded
+---
+{"Authorization" : vars.jwtToken}]]]></http:headers>
+			<http:query-params><![CDATA[#[output application/java
+---
+{
+	"q" : vars.qualString
+}]]]></http:query-params>
+		</http:request>
+	</flow>
+	<flow name="update-task" doc:id="69e7a78e-ad1c-4430-ba3a-f4ef2cafa4c8">
+		<set-variable value="#[payload]" doc:name="Save update request payload" doc:id="53c5fcf5-23e2-4292-b073-a0a8c0f875fc" variableName="reqInfo" />
+		<flow-ref doc:name="get-jwt-from-os" doc:id="b7ccba86-7bf2-41f2-86ba-b822735d47af" name="get-jwt-from-os" />
+		<http:request method="PUT" doc:name="Update Task" doc:id="1ff2525c-1b98-4467-bad6-d0c9edeb80e9" config-ref="Remedy_HTTP_Req_config" path='#["/api/arsys/v1/entry/TMS:Task/" ++ vars.task_id]'>
+			<http:body><![CDATA[#[%dw 2.0
+output application/json
+---
+{
+  "values": vars.reqInfo
+}]]]></http:body>
+			<http:headers><![CDATA[#[output application/x-www-form-urlencoded
+---
+{
+	"Authorization" : vars.jwtToken
+}]]]></http:headers>
+		</http:request>
+	</flow>
+	<flow name="query-workinfo-by-task-id" doc:id="a5d4a8f0-b122-46bc-8d2c-8fbf943bbf64">
+		<set-variable value='#[(attributes.queryParams.taskID default "")]' doc:name="Save TaskID" doc:id="7cf9abc8-136a-4155-9852-1b0b8bacfb9f" variableName="taskID"/>
+		<flow-ref doc:name="get-jwt-from-os" doc:id="5351f682-9144-405a-b311-9ba508cd0068" name="get-jwt-from-os" />
+		<http:request method="GET" doc:name="Get WorkInfo" doc:id="bc551a33-6018-4dd9-9690-740f0c12fa95" config-ref="Remedy_HTTP_Req_config" path='#["/api/arsys/v1/entry/TMS:Task/"  ++ vars.taskID ++ "/assoc/TMS:TAS:WorkInfo"]'>
+			<http:headers><![CDATA[#[output application/x-www-form-urlencoded
+---
+{
+	"Authorization" : vars.jwtToken
+}]]]></http:headers>
+		</http:request>
+		<ee:transform doc:name="Transform Message" doc:id="b2c4f3f7-3e25-4878-ab37-4ebe9c30ca09">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+	<flow name="create-workinfo" doc:id="9b9d62d3-e9a0-4dcc-98a6-ee884a6d6872">
+		<set-variable value="#[payload]" doc:name="Save WorkInfo payload" doc:id="9ab96413-3903-4407-9be3-81b83b583f56" variableName="reqInfo" />
+		<flow-ref doc:name="get-jwt-from-os" doc:id="c2a89e2d-e8cb-4b47-8725-00b1a0f97c71" name="get-jwt-from-os" />
+		<http:request method="GET" doc:name="Get Task " doc:id="8dd91301-a94b-460d-bb2d-137ed56b2686" config-ref="Remedy_HTTP_Req_config" path='#["/api/arsys/v1/entry/TMS:Task/" ++ vars.reqInfo["task_ID"]]'>
+			<http:headers><![CDATA[#[output application/x-www-form-urlencoded
+---
+{
+	"Authorization" : vars.jwtToken
+}]]]></http:headers>
+		</http:request>
+		<ee:transform doc:name="Set WorkInfo payload" doc:id="b23a7498-7825-4a57-899d-d7397dd15c81">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"TaskOrTaskGroupID": vars.reqInfo["task_ID"],
+	"Notes":  vars.reqInfo["comment"],
+	"TaskOrTaskGroupInstanceId": payload["values"]["InstanceId"],
+	
+	"WorkInfoType": "General Information",
+	"Summary": "From JIRA"
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<http:request method="POST" doc:name="Create Workinfo" doc:id="462b69ca-c1b8-4621-bbf4-3692186ac5cb" config-ref="Remedy_HTTP_Req_config" path='#["/api/arsys/v1/entry/TMS:WorkInfo"]'>
+			<http:body><![CDATA[#[%dw 2.0
+output application/json
+---
+{
+  "values": payload
+}]]]></http:body>
+			<http:headers><![CDATA[#[output application/x-www-form-urlencoded
+---
+{
+	"Authorization" : vars.jwtToken
+}]]]></http:headers>
+		</http:request>
+	</flow>
+	<flow name="get-jwt-from-os" doc:id="52661b5a-a378-4ee4-ae4e-420ae36ea8b5">
+		<os:retrieve doc:name="Retrieve JWT from OS" doc:id="cdc11767-38be-4154-8308-4bf608000f91" objectStore="Remedy_Object_store" key="os_jwtToken" target="jwtToken" />
+		<choice doc:name="Choice" doc:id="978cab4e-31ae-42af-a1af-f4ec5b8fd738">
+			<when expression="#[vars.jwtToken == null]">
+				<flow-ref doc:name="Request new JWT" doc:id="2305bb13-18ff-42fe-8621-5f678bb810f2" name="request-jwt-from-remedy" />
+				<os:retrieve doc:name="Retrieve JWT" doc:id="699acbce-d2c8-4a4c-a114-0422052bfa3f" key="os_jwtToken" objectStore="Remedy_Object_store" target="jwtToken" />
+			</when>
+		</choice>
+	</flow>
+	<flow name="request-jwt-from-remedy" doc:id="6b023429-77ea-41f0-875f-e9eaf2dcee5c" >
+		<http:request method="POST" doc:name="Request JWT" doc:id="8d61146e-b0ca-4ccb-ac50-8223a236fc2d" config-ref="Remedy_HTTP_Req_config" path="/api/jwt/login">
+			<http:body><![CDATA[#[%dw 2.0
+output application/x-www-form-urlencoded
+
+---
+{
+	username: Mule::p('remedy.user') default "user",
+	password: Mule::p('remedy.password') default "password"
+}]]]></http:body>
+		</http:request>
+		<os:store doc:name="Store JWT" doc:id="7d0ef87f-1928-4882-b905-0f0634e5f4c4" key="os_jwtToken" objectStore="Remedy_Object_store">
+			<os:value><![CDATA[#["AR-JWT " ++ payload]]]></os:value>
+		</os:store>
+	</flow>
+	<flow name="refresh-jwt-every-59min" doc:id="cf816a2c-3576-438f-be3d-3a44b32f3438">
+		<scheduler doc:name="Scheduler" doc:id="38cc5d2e-3731-4cf6-acd9-73f6558d4bb2">
+			<scheduling-strategy>
+				<fixed-frequency frequency="59" timeUnit="MINUTES" />
+			</scheduling-strategy>
+		</scheduler>
+		<flow-ref doc:name="request-remedy-jwt" doc:id="7e8a6ede-540e-4d80-aec7-970a76e5128f" name="request-jwt-from-remedy" />
+	</flow>
+</mule>
